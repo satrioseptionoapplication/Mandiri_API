@@ -1,0 +1,64 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <div id="gridContainer"></div>
+</div>
+
+
+@section Scripts{
+    <script>
+        function sendRequest(url, method = 'GET', data) {
+            const d = $.Deferred();
+
+            $.ajax(url, {
+                method,
+                data,
+                cache: false,
+                xhrFields: { withCredentials: true },
+            }).done((result) => {
+                d.resolve(method === 'GET' ? result.data : result);
+            }).fail((xhr) => {
+                d.reject(xhr.responseJSON ? xhr.responseJSON.Message : xhr.statusText);
+            });
+
+            return d.promise();
+        }
+
+        $(() => {
+
+
+            $('#gridContainer').dxDataGrid({
+                dataSource: new DevExpress.data.CustomStore({
+                    key: 'Id',
+                    load() {
+                        return sendRequest('https://localhost:7253/api/UsersAPI');
+                    },
+                    insert(values) {
+                        return sendRequest('https://localhost:7253/api/UsersAPI', 'POST', {
+                            values: JSON.stringify(values),
+                        });
+                    },
+                    update(key, values) {
+                        return sendRequest('https://localhost:7253/api/UsersAPI', 'PUT', {
+                            key,
+                            values: JSON.stringify(values),
+                        });
+                    },
+                    remove(key) {
+                        return sendRequest('https://localhost:7253/api/UsersAPI', 'DELETE', {
+                            key,
+                        });
+                    },
+                }),
+                keyExpr: 'ID',
+                columns: ['FullName', 'Address'],
+                showBorders: true,
+            });
+        });
+
+
+    </script>
+}
